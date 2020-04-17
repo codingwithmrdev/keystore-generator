@@ -1,6 +1,6 @@
 {
   "name": "keystore-generator",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Generate .keystore files for signing apk's.",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,16 @@
   "bin": {
     "kg": "bin/kg"
   },
-  "keywords": [],
-  "author": "",
-  "license": "GNU"
+  "keywords": [
+    "keystore",
+    "generator",
+    "apk",
+    "sign"
+  ],
+  "author": "Gihan Lakshan <codingwithmr.dev>",
+  "license": "GNU",
+  "repository": {
+    "type": "url",
+    "url": "https://github.com/codingwithmrdev/keystore-generator"
+  }
 }
