@@ -1,0 +1,101 @@
+#!/usr/bin/env node
+
+const { spawn } = require("child_process");
+const pkg = require("../package.json");
+const path = require('path');
+
+if (process.argv.length < 3) {
+  process.stderr.write([
+    ' ' + pkg['description'] + ' ' + pkg['version'],
+  ].join('\n') + '\n\n' + " Usage: " + path.basename(process.argv[1]) + " key generate\n");
+
+  process.exit(1);
+} else {
+  if (process.argv.length == 4) {
+    
+    if (process.argv[2] == 'key' && process.argv[3] == 'generate') {
+      // Generating New Keystore
+      process.stdout.write("Generating New Keystore" + "\n");
+
+      var alias = 'Unknown',
+          password = 'Unknown',
+          fullName = 'Unknown',
+          organizationUnit = 'Unknown',
+          organization = 'Unknown',
+          city = 'Unknown',
+          state = 'Unknown',
+          countryCode = 'Unknown';
+    
+      const readline = require('readline').createInterface({
+        input: process.stdin,
+        output: process.stdout
+      });
+
+      const promptQuiz = (quiz) => {
+        return new Promise((resolve, reject) => {
+          readline.question(quiz, (answer) => {
+            answer ? resolve(answer):resolve('Unknown');
+          });
+        });
+      };
+
+      const main = async () => {
+        alias = await promptQuiz(`Enter Alias name: `);
+        password = await promptQuiz(`Enter keystore password: `);
+        fullName = await promptQuiz(`What is your first and last name?\n [Unknow]: `);
+        organizationUnit = await promptQuiz(`What is the name of your organizational unit?\n [Unknow]: `);
+        organization = await promptQuiz(`What is the name of your organization?\n [Unknow]: `);
+        city = await promptQuiz(`What is the name of your City or Locality?\n [Unknow]: `);
+        state = await promptQuiz(`What is the name of your State or Province?\n [Unknow]: `);
+        countryCode = await promptQuiz(`What is the two-letter country code for this unit?\n [Unknow]: `);
+        
+        readline.close();
+
+        const keytoolCmd = spawn("keytool", ["-genkey", "-v", "-keystore", "my-release-key.keystore", "-keyalg", "RSA", "-keysize", "2048", "-validity", "10000", "-alias", alias]);
+
+        keytoolCmd.stdout.on("data", data => {
+          process.stdout.write((`${data}`));
+        });
+
+        keytoolCmd.stderr.on("data", data => {
+          keytoolCmd.stdin.write(password + "\r\n");
+          keytoolCmd.stdin.write(password + "\r\n");
+          keytoolCmd.stdin.write(fullName + "\r\n");
+          keytoolCmd.stdin.write(organizationUnit + "\r\n");
+          keytoolCmd.stdin.write(organization + "\r\n");
+          keytoolCmd.stdin.write(city + "\r\n");
+          keytoolCmd.stdin.write(state + "\r\n");
+          keytoolCmd.stdin.write(countryCode + "\r\n");
+          keytoolCmd.stdin.write("yes\r\n");
+        });
+
+        keytoolCmd.on('error', (error) => {
+          process.stdout.write(`error: ${error.message}\n`);
+        });
+
+        keytoolCmd.on("close", code => {
+          if (code === 0) {
+            process.stdout.write("Keystore generated successfully!\n");
+          } else {
+            process.stdout.write(`child process exited with code ${code}\n`);
+          }
+        });
+      }
+
+      main();
+    } else {
+      process.stderr.write(' Invalid command\n');
+      process.stderr.write([
+        ' ' + pkg['description'] + ' ' + pkg['version'],
+      ].join('\n') + '\n\n' + " Usage: " + path.basename(process.argv[1]) + " key generate\n");
+    
+      process.exit(1);
+    }
+  } else {
+    process.stderr.write([
+      ' ' + pkg['description'] + ' ' + pkg['version'],
+    ].join('\n') + '\n\n' + " Usage: " + path.basename(process.argv[1]) + " key generate\n");
+  
+    process.exit(1);
+  }
+}

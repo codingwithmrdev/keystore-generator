@@ -1,0 +1,15 @@
+{
+  "name": "keystore-generator",
+  "version": "1.0.0",
+  "description": "Generate .keystore files for signing apk's.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "kg": "bin/kg"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "GNU"
+}
