@@ -1,6 +1,6 @@
 {
   "name": "keystore-generator",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Generate .keystore files for signing apk's.",
   "main": "index.js",
   "scripts": {
