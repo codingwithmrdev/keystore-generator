@@ -3,17 +3,26 @@
 const { spawn } = require("child_process");
 const pkg = require("../package.json");
 const path = require('path');
+const kgHelper = require('../index');
+const commandLineArgs = require('command-line-args')
 
 if (process.argv.length < 3) {
-  process.stderr.write([
-    ' ' + pkg['description'] + ' ' + pkg['version'],
-  ].join('\n') + '\n\n' + " Usage: " + path.basename(process.argv[1]) + " key generate\n");
-
-  process.exit(1);
+  kgHelper.printUsage();
 } else {
-  if (process.argv.length == 4) {
-    
-    if (process.argv[2] == 'key' && process.argv[3] == 'generate') {
+  const mainDefinitions = [
+    { name: 'name', defaultOption: true }
+  ];
+  const mainCommand = commandLineArgs(mainDefinitions, { stopAtFirstUnknown: true })
+  let argv = mainCommand._unknown || []
+
+  if (mainCommand.name === 'key') {
+    const subCommandDefinitions = [
+      { name: 'name', defaultOption: true }
+    ];
+    const subCommand = commandLineArgs(subCommandDefinitions, { argv, stopAtFirstUnknown: true });
+    argv = subCommand._unknown || [];
+
+    if (subCommand.name === 'generate') {
       // Generating New Keystore
       process.stdout.write("Generating New Keystore" + "\n");
 
@@ -25,31 +34,18 @@ if (process.argv.length < 3) {
           city = 'Unknown',
           state = 'Unknown',
           countryCode = 'Unknown';
-    
-      const readline = require('readline').createInterface({
-        input: process.stdin,
-        output: process.stdout
-      });
-
-      const promptQuiz = (quiz) => {
-        return new Promise((resolve, reject) => {
-          readline.question(quiz, (answer) => {
-            answer ? resolve(answer):resolve('Unknown');
-          });
-        });
-      };
 
       const main = async () => {
-        alias = await promptQuiz(`Enter Alias name: `);
-        password = await promptQuiz(`Enter keystore password: `);
-        fullName = await promptQuiz(`What is your first and last name?\n [Unknow]: `);
-        organizationUnit = await promptQuiz(`What is the name of your organizational unit?\n [Unknow]: `);
-        organization = await promptQuiz(`What is the name of your organization?\n [Unknow]: `);
-        city = await promptQuiz(`What is the name of your City or Locality?\n [Unknow]: `);
-        state = await promptQuiz(`What is the name of your State or Province?\n [Unknow]: `);
-        countryCode = await promptQuiz(`What is the two-letter country code for this unit?\n [Unknow]: `);
+        alias = await kgHelper.promptQuiz(`Enter Alias name: `);
+        password = await kgHelper.promptQuiz(`Enter keystore password: `);
+        fullName = await kgHelper.promptQuiz(`What is your first and last name?\n [Unknow]: `);
+        organizationUnit = await kgHelper.promptQuiz(`What is the name of your organizational unit?\n [Unknow]: `);
+        organization = await kgHelper.promptQuiz(`What is the name of your organization?\n [Unknow]: `);
+        city = await kgHelper.promptQuiz(`What is the name of your City or Locality?\n [Unknow]: `);
+        state = await kgHelper.promptQuiz(`What is the name of your State or Province?\n [Unknow]: `);
+        countryCode = await kgHelper.promptQuiz(`What is the two-letter country code for this unit?\n [Unknow]: `);
         
-        readline.close();
+        kgHelper.closeReadline();
 
         const keytoolCmd = spawn("keytool", ["-genkey", "-v", "-keystore", "my-release-key.keystore", "-keyalg", "RSA", "-keysize", "2048", "-validity", "10000", "-alias", alias]);
 
@@ -83,19 +79,18 @@ if (process.argv.length < 3) {
       }
 
       main();
-    } else {
-      process.stderr.write(' Invalid command\n');
-      process.stderr.write([
-        ' ' + pkg['description'] + ' ' + pkg['version'],
-      ].join('\n') + '\n\n' + " Usage: " + path.basename(process.argv[1]) + " key generate\n");
-    
-      process.exit(1);
+    } else if (subCommand.name === 'sign') {
+      const runDefinitions = [
+        { name: 'src', alias: 's', type: String },
+        { name: 'dest', alias: 'd', type: String }
+      ];
+
+      const runOptions = commandLineArgs(runDefinitions, { argv, stopAtFirstUnknown: true });
+
+      console.log('\nrunOptions\n==========');
+      console.log(runOptions);
     }
   } else {
-    process.stderr.write([
-      ' ' + pkg['description'] + ' ' + pkg['version'],
-    ].join('\n') + '\n\n' + " Usage: " + path.basename(process.argv[1]) + " key generate\n");
-  
-    process.exit(1);
+    kgHelper.printUsage();
   }
 }

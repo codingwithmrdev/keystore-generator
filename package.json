@@ -20,5 +20,8 @@
   "repository": {
     "type": "url",
     "url": "https://github.com/codingwithmrdev/keystore-generator"
+  },
+  "dependencies": {
+    "command-line-args": "^5.1.1"
   }
 }
