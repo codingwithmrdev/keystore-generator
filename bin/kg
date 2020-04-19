@@ -87,6 +87,18 @@ if (process.argv.length < 3) {
 
       const runOptions = commandLineArgs(runDefinitions, { argv, stopAtFirstUnknown: true });
 
+      if (!runOptions.src || !runOptions.dest) {
+        process.stdout.write("Invalid Command" + "\n");
+        kgHelper.printUsage();
+      }
+
+      const source = runOptions.src;
+      const destination = runOptions.dest;
+
+      if (!kgHelper.checkSourceExists(source)) {
+        console.log("Invalid Source\n");
+      }
+
       console.log('\nrunOptions\n==========');
       console.log(runOptions);
     }
