@@ -1,19 +1,22 @@
 #!/usr/bin/env node
 
 const { spawn } = require("child_process");
-const pkg = require("../package.json");
-const path = require('path');
 const kgHelper = require('../index');
-const commandLineArgs = require('command-line-args')
+const commandLineArgs = require('command-line-args');
 
 if (process.argv.length < 3) {
   kgHelper.printUsage();
 } else {
   const mainDefinitions = [
-    { name: 'name', defaultOption: true }
+    { name: 'name', defaultOption: true },
+    { name: 'help', alias: 'h', type: String },
   ];
-  const mainCommand = commandLineArgs(mainDefinitions, { stopAtFirstUnknown: true })
-  let argv = mainCommand._unknown || []
+  const mainCommand = commandLineArgs(mainDefinitions, { stopAtFirstUnknown: true });
+  let argv = mainCommand._unknown || [];
+
+  if (mainCommand.help) {
+    kgHelper.printUsage();
+  }
 
   if (mainCommand.name === 'key') {
     const subCommandDefinitions = [
@@ -137,8 +140,14 @@ if (process.argv.length < 3) {
       }
 
       runCmd();
+    } else {
+      process.stdout.write("Invalid command!\n");
+
+      kgHelper.printUsage();
     }
   } else {
+    process.stdout.write("Invalid command!\n");
+
     kgHelper.printUsage();
   }
 }
