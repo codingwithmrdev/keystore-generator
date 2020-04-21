@@ -37,7 +37,7 @@ if (process.argv.length < 3) {
 
       const main = async () => {
         alias = await kgHelper.promptQuiz(`Enter Alias name: `);
-        password = await kgHelper.promptQuiz(`Enter keystore password: `);
+        password = await kgHelper.promptQuiz(`Enter keystore password: `, true);
         fullName = await kgHelper.promptQuiz(`What is your first and last name?\n [Unknow]: `);
         organizationUnit = await kgHelper.promptQuiz(`What is the name of your organizational unit?\n [Unknow]: `);
         organization = await kgHelper.promptQuiz(`What is the name of your organization?\n [Unknow]: `);
@@ -75,6 +75,8 @@ if (process.argv.length < 3) {
           } else {
             process.stdout.write(`child process exited with code ${code}\n`);
           }
+
+          process.exit(1);
         });
       }
 
@@ -82,25 +84,59 @@ if (process.argv.length < 3) {
     } else if (subCommand.name === 'sign') {
       const runDefinitions = [
         { name: 'src', alias: 's', type: String },
-        { name: 'dest', alias: 'd', type: String }
+        { name: 'keystore', alias: 'k', type: String },
       ];
 
       const runOptions = commandLineArgs(runDefinitions, { argv, stopAtFirstUnknown: true });
 
-      if (!runOptions.src || !runOptions.dest) {
+      if (!runOptions.src || !runOptions.keystore) {
         process.stdout.write("Invalid Command" + "\n");
         kgHelper.printUsage();
       }
 
       const source = runOptions.src;
-      const destination = runOptions.dest;
+      const keystore = runOptions.keystore;
 
       if (!kgHelper.checkSourceExists(source)) {
-        console.log("Invalid Source\n");
+        process.stdout.write("Invalid Source apk" + "\n");
       }
 
-      console.log('\nrunOptions\n==========');
-      console.log(runOptions);
+      if (!kgHelper.checkKeystoreExists(keystore)) {
+        process.stdout.write("Invalid Keystore File" + "\n");
+      }
+
+      const runCmd = async () => {
+        alias = await kgHelper.promptQuiz(`Enter Alias: `, true);
+        password = await kgHelper.promptQuiz(`Enter Password: `, true);
+
+        kgHelper.closeReadline();
+
+        const signingCmd = spawn("jarsigner", ["-verbose", "-sigalg", "SHA1withRSA", "-digestalg", "SHA1", "-keystore", keystore, source, alias]);
+
+        signingCmd.stdout.on("data", data => {
+          process.stdout.write((`${data}`));
+        });
+
+        signingCmd.stderr.on("data", data => {
+          signingCmd.stdin.write(password + "\r\n");
+        });
+
+        signingCmd.on('error', (error) => {
+          process.stdout.write(`error: ${error.message}\n`);
+        });
+
+        signingCmd.on("close", code => {
+          if (code === 0) {
+            process.stdout.write("Apk signed successfully!\n");
+          } else {
+            process.stdout.write(`child process exited with code ${code}\n`);
+          }
+
+          process.exit(1);
+        });
+      }
+
+      runCmd();
     }
   } else {
     kgHelper.printUsage();
